@@ -57,8 +57,8 @@ class BlogVisit(Base):
     __table__ = Table('WikimediaBlogVisit_5308166', Base.metadata, autoload=True)
 
 session = Session()
-q = session.query(BlogVisit).filter(BlogVisit.webHost == 'blog.wikimedia.org')
-q = q.filter(BlogVisit.timestamp.startswith(yesterday.strftime('%Y%m%d')))
+qalltime = session.query(BlogVisit).filter(BlogVisit.webHost == 'blog.wikimedia.org')
+q = qalltime.filter(BlogVisit.timestamp.startswith(yesterday.strftime('%Y%m%d')))
 
 uniques = set()
 visits = 0
@@ -94,6 +94,11 @@ for visit in q:
             ref_domains[domain] += 1
     referrers[ref] += 1
 
+urlsalltime = collections.Counter()
+
+for visit in qalltime:
+    urlsalltime[visit.event_requestUrl] += 1
+
 body = StringIO()
 
 body.write('Total visits: %d\n' % visits)
@@ -101,10 +106,10 @@ body.write('Unique visitors: %d\n' % len(uniques))
 body.write('\n')
 
 body.write('\n')
-body.write('Pages / hits (ordered by number of hits):\n')
+body.write('Pages / hits today / hits total (ordered by number of hits today):\n')
 body.write('=========================================\n')
 for url, count in sorted(urls.iteritems(), key=operator.itemgetter(1), reverse=True):
-    body.write('%s\t%s\n' % (url, count))
+    body.write('%s\t%s\t(%s)\n' % (url, count, urlsalltime[url]))
 
 body.seek(0)
 
